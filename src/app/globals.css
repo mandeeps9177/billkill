@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Google Sans', 'Roboto', system-ui, sans-serif;
+  background: #F8F9FA;
+  color: #202124;
+  -webkit-font-smoothing: antialiased;
+}

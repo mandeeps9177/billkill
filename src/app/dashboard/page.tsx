@@ -46,6 +46,21 @@ export default function DashboardPage() {
     }
   };
 
+  const cancelTrip = async (tripId: number) => {
+    if (!confirm("Cancel this trip? This cannot be undone.")) return;
+    try {
+      const res = await apiFetch("/api/trip-requests/cancel", {
+        method: "PATCH",
+        body: JSON.stringify({ trip_id: tripId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message || "Failed to cancel trip");
+    }
+  };
+
   const handleProposalAction = async (proposalId: number, response: "accepted" | "rejected") => {
     setActionLoading(proposalId);
     try {
@@ -260,6 +275,12 @@ export default function DashboardPage() {
                       {fare && (
                         <p style={{ fontSize: 12, color: "#1E8E3E", fontWeight: 600 }}>save ₹{fare.savings}</p>
                       )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); cancelTrip(trip.id); }}
+                        style={{ fontSize: 11, color: "#D93025", background: "#FCE8E6", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontWeight: 600, marginTop: 4, fontFamily: "inherit" }}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 );

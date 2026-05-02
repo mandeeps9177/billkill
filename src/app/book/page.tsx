@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ROUTES } from "@/data/config";
+
 import { useAuth } from "@/components/AuthContext";
 
 const AREAS = ["Koramangala", "Indiranagar", "HSR Layout", "Sarjapur", "Whitefield", "Electronic City", "Hebbal", "Yeshwanthpur", "Jayanagar", "JP Nagar", "Marathahalli", "Bellandur", "Bannerghatta Road"];
@@ -86,12 +86,7 @@ export default function BookPage() {
     }
   }, [authLoading, user, router]);
 
-  const matchedRoute = ROUTES.find(r => r.area === area);
-  const soloFare = matchedRoute ? matchedRoute.solo : 1100;
-  const sharedFare = matchedRoute ? matchedRoute.shared : 420;
-  const savings = soloFare - sharedFare;
-  const savingsPct = Math.round((savings / soloFare) * 100);
-
+          
   const validate = () => {
     const e: Record<string, string> = {};
     if (!date) e.date = "Select your travel date";
@@ -354,145 +349,6 @@ export default function BookPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Savings preview */}
-                {area && matchedRoute && (
-                  <div style={{ marginTop: 16, background: "#202124", borderRadius: 16, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", animation: "fadeUp 0.5s ease" }}>
-                    <div>
-                      <p style={{ fontSize: 11, color: "#80868B", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>Estimated savings</p>
-                      <p style={{ fontSize: 24, fontWeight: 700, color: "#fff", animation: "countUp 0.4s ease" }}>₹{savings} <span style={{ fontSize: 13, fontWeight: 400, color: "#80868B" }}>({savingsPct}% off)</span></p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={{ fontSize: 11, color: "#80868B", marginBottom: 2 }}>Solo ₹{soloFare}</p>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: "#1A73E8" }}>₹{sharedFare}</p>
-                      <p style={{ fontSize: 10, color: "#5F6368" }}>per person</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Step 2: Quote ── */}
-        {step === 2 && (
-          <div style={{ maxWidth: 600, margin: "0 auto", padding: "32px 24px 64px" }}>
-            <div style={{ background: "#fff", border: "1px solid #E8EAED", borderRadius: 20, padding: 28, animation: "fadeUp 0.4s ease" }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#202124", marginBottom: 4 }}>Your savings quote</h1>
-              <p style={{ fontSize: 14, color: "#80868B", marginBottom: 24 }}>Here's what you save by sharing this ride</p>
-
-              {/* Route summary */}
-              <div style={{ background: "#F8F9FA", borderRadius: 14, padding: 18, marginBottom: 20 }}>
-                <div style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, paddingTop: 2 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#1A73E8" }} />
-                    <div style={{ width: 2, flex: 1, background: "#DADCE0", borderRadius: 1 }} />
-                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#202124" }} />
-                  </div>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
-                    <div>
-                      <p style={{ fontSize: 11, color: "#80868B", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>{direction === "to" ? "Pickup" : "Departure"}</p>
-                      <p style={{ fontSize: 15, fontWeight: 600, color: "#202124" }}>{area}</p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 11, color: "#80868B", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>{direction === "to" ? "Drop" : "Destination"}</p>
-                      <p style={{ fontSize: 15, fontWeight: 600, color: "#202124" }}>BLR Airport — {terminal.split("—")[0].trim()}</p>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right", paddingTop: 2 }}>
-                    <p style={{ fontSize: 12, color: "#80868B" }}>{date}</p>
-                    <p style={{ fontSize: 12, color: "#80868B", marginTop: 4 }}>{time}</p>
-                    {flight && <p style={{ fontSize: 12, color: "#80868B", marginTop: 4 }}>{flight}</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Fare cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-                <div style={{ border: "1px solid #DADCE0", borderRadius: 14, padding: 18 }}>
-                  <p style={{ fontSize: 12, color: "#80868B", marginBottom: 8 }}>Solo (Ola/Uber)</p>
-                  <p style={{ fontSize: 28, fontWeight: 700, color: "#202124" }}>₹{soloFare}</p>
-                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 6 }}>You pay alone</p>
-                </div>
-                <div style={{ border: "2px solid #1A73E8", borderRadius: 14, padding: 18, background: "#E8F0FE" }}>
-                  <p style={{ fontSize: 12, color: "#1A73E8", fontWeight: 600, marginBottom: 8 }}>With Billkill ✨</p>
-                  <p style={{ fontSize: 28, fontWeight: 700, color: "#202124" }}>₹{sharedFare}</p>
-                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 6 }}>Per person, shared</p>
-                </div>
-              </div>
-
-              {/* Savings callout */}
-              <div style={{ background: "#202124", borderRadius: 14, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <span style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>You save</span>
-                <span style={{ fontSize: 24, fontWeight: 700, color: "#fff" }}>₹{savings} <span style={{ fontSize: 14, fontWeight: 400, color: "#80868B" }}>({savingsPct}%)</span></span>
-              </div>
-
-              <p style={{ fontSize: 12, color: "#80868B", background: "#F8F9FA", borderRadius: 10, padding: 12, marginBottom: 24, lineHeight: 1.6 }}>
-                Fares are estimates based on Ola/Uber average pricing. Actual cost depends on the taxi booked and number of co-travellers matched.
-              </p>
-
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setStep(1)} className="bk-btn-sec">← Edit</button>
-                <button onClick={async () => {
-                  setSubmitting(true);
-                  setSubmitError("");
-                  try {
-                    const res = await apiFetch("/api/trip-requests", {
-                      method: "POST",
-                      body: JSON.stringify({
-                        direction,
-                        area,
-                        terminal,
-                        travel_date: date,
-                        flight_time: time,
-                        flight_number: flight || undefined,
-                        pax_count: parseInt(pax),
-                        bag_count: parseInt(bags),
-                      }),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.error);
-                    // Trigger batch matcher
-                    await apiFetch("/api/match-batch", { method: "POST" });
-                    setStep(3);
-                  } catch (err: any) {
-                    setSubmitError(err.message || "Failed to submit trip");
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }} className="bk-btn" style={{ flex: 2 }} disabled={submitting}>
-                  {submitting ? "Submitting…" : "Find my match →"}
-                </button>
-              </div>
-              {submitError && <p style={{ fontSize: 12, color: "#D93025", marginTop: 8, textAlign: "center" }}>{submitError}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* ── Step 3: Matching ── */}
-        {step === 3 && (
-          <div style={{ maxWidth: 520, margin: "0 auto", padding: "48px 24px 64px", textAlign: "center" }}>
-            <div style={{ background: "#fff", border: "1px solid #E8EAED", borderRadius: 20, padding: "36px 28px 32px", animation: "fadeUp 0.4s ease" }}>
-              <PulseRing />
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#202124", marginBottom: 8 }}>Looking for your match...</h1>
-              <p style={{ fontSize: 14, color: "#80868B", marginBottom: 28, lineHeight: 1.6, maxWidth: 340, margin: "0 auto 28px" }}>
-                Scanning co-travellers with similar flight times and pickup zones. You'll get an SMS the moment we find a match.
-              </p>
-
-              <div style={{ background: "#F8F9FA", borderRadius: 14, padding: 18, marginBottom: 24, textAlign: "left" }}>
-                {[
-                  ["Direction", direction === "to" ? "City → BLR" : "BLR → City"],
-                  ["Date", date],
-                  ["Time", time],
-                  ["Area", area],
-                  ["Terminal", terminal.split("—")[0].trim()],
-                  ["Match window", "±90 minutes"],
-                ].map(([k, v]) => (
-                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #E8EAED" }}>
-                    <span style={{ fontSize: 13, color: "#80868B" }}>{k}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#202124" }}>{v}</span>
-                  </div>
-                ))}
               </div>
 
               <Link href="/dashboard" className="bk-btn" style={{ textDecoration: "none", display: "flex" }}>

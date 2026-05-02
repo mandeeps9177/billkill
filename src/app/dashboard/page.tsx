@@ -20,13 +20,28 @@ export default function DashboardPage() {
   const { user, loading: authLoading, apiFetch } = useAuth();
   const [trips, setTrips] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
+  const [tripProposalMap, setTripProposalMap] = useState<Record<number, any[]>>({});
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return; }
     if (user) fetchData();
   }, [authLoading, user]);
+
+  const fetchTripProposals = async (trips: any[]) => {
+    const map: Record<number, any[]> = {};
+    const token = localStorage.getItem("bk_token");
+    for (const t of trips) {
+      try {
+        const res = await fetch("/api/trip-requests/proposals?trip_id=" + t.id, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+        map[t.id] = data.proposals || [];
+      } catch { map[t.id] = []; }
+    }
+    setTripProposalMap(map);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -38,6 +53,7 @@ export default function DashboardPage() {
       const tripsData = await tripsRes.json();
       const proposalsData = await proposalsRes.json();
       setTrips(tripsData.trips || []);
+      await fetchTripProposals(tripsData.trips || []);
       setProposals(proposalsData.proposals || []);
     } catch (err) {
       console.error("Failed to fetch data", err);
@@ -58,23 +74,6 @@ export default function DashboardPage() {
       await fetchData();
     } catch (err: any) {
       alert(err.message || "Failed to cancel trip");
-    }
-  };
-
-  const handleProposalAction = async (proposalId: number, response: "accepted" | "rejected") => {
-    setActionLoading(proposalId);
-    try {
-      const res = await apiFetch("/api/proposals", {
-        method: "PATCH",
-        body: JSON.stringify({ proposal_id: proposalId, response }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message || "Something went wrong");
-    } finally {
-      setActionLoading(null);
     }
   };
 
@@ -157,86 +156,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Match proposals ── */}
-        {proposals.length > 0 && (
-          <div style={{ marginBottom: 32, animation: "fadeUp 0.45s ease" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A73E8", animation: "pulse 2s infinite" }} />
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#202124" }}>Match proposals</h2>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#1A73E8", background: "#E8F0FE", borderRadius: 10, padding: "2px 10px" }}>{proposals.length}</span>
-            </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {proposals.map((p: any) => {
-                const fare = getFare(p.my_area);
-                return (
-                  <div key={p.id} style={{ background: "#fff", border: "2px solid #1A73E8", borderRadius: 18, padding: 0, overflow: "hidden" }}>
-                    {/* Blue header strip */}
-                    <div style={{ background: "#E8F0FE", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#1A73E8", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 700 }}>
-                          {p.other_name?.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 15, fontWeight: 700, color: "#202124" }}>🎉 {p.other_name}</p>
-                          <p style={{ fontSize: 12, color: "#5F6368" }}>wants to share your ride</p>
-                        </div>
-                      </div>
-                      {fare && (
-                        <div style={{ textAlign: "right" }}>
-                          <p style={{ fontSize: 11, color: "#80868B" }}>You save</p>
-                          <p style={{ fontSize: 18, fontWeight: 700, color: "#1E8E3E" }}>₹{fare.savings}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Details */}
-                    <div style={{ padding: "16px 20px" }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
-                        {[
-                          { label: "Route", val: `${p.other_area} → BLR`, icon: "📍" },
-                          { label: "Date", val: formatDate(p.travel_date), icon: "📅" },
-                          { label: "Their flight", val: formatTime(p.other_flight_time), icon: "🕐" },
-                        ].map(d => (
-                          <div key={d.label} style={{ background: "#F8F9FA", borderRadius: 10, padding: "10px 12px" }}>
-                            <p style={{ fontSize: 11, color: "#80868B", marginBottom: 2 }}>{d.icon} {d.label}</p>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: "#202124" }}>{d.val}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Status + actions */}
-                      {p.my_response === "pending" ? (
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <button
-                            onClick={() => handleProposalAction(p.id, "accepted")}
-                            disabled={actionLoading === p.id}
-                            style={{ flex: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#1E8E3E", color: "#fff", fontWeight: 600, padding: "12px 20px", borderRadius: 12, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "inherit" }}
-                          >
-                            {actionLoading === p.id ? "…" : "✓ Accept match"}
-                          </button>
-                          <button
-                            onClick={() => handleProposalAction(p.id, "rejected")}
-                            disabled={actionLoading === p.id}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", color: "#5F6368", fontWeight: 600, padding: "12px 16px", borderRadius: 12, fontSize: 14, border: "1px solid #DADCE0", cursor: "pointer", fontFamily: "inherit" }}
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      ) : p.my_response === "accepted" && p.other_response === "pending" ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#FEF7E0", borderRadius: 12, padding: "12px 16px" }}>
-                          <Clock style={{ width: 16, height: 16, color: "#F9AB00" }} />
-                          <p style={{ fontSize: 13, color: "#5F6368", fontWeight: 500 }}>You accepted — waiting for {p.other_name.split(" ")[0]}</p>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Active trips ── */}
         {activeTrips.length > 0 && (
           <div style={{ marginBottom: 32, animation: "fadeUp 0.5s ease" }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: "#202124", marginBottom: 16 }}>Active trips</h2>
@@ -244,44 +164,120 @@ export default function DashboardPage() {
               {activeTrips.map((trip: any) => {
                 const sc = statusConfig[trip.status] || statusConfig.open;
                 const StatusIcon = sc.icon;
-                const fare = getFare(trip.area);
+                const tripProposals = tripProposalMap[trip.id] || [];
                 return (
-                  <div key={trip.id} style={{ background: "#fff", border: "1px solid #E8EAED", borderRadius: 16, padding: "18px 20px", display: "flex", alignItems: "center", gap: 16 }}>
-                    {/* Left icon */}
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: sc.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <StatusIcon style={{ width: 20, height: 20, color: sc.color }} />
-                    </div>
-
-                    {/* Middle info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: "#202124" }}>
-                          {trip.direction === "to" ? `${trip.area} → BLR` : `BLR → ${trip.area}`}
-                        </span>
-                        {trip.flight_number && (
-                          <span style={{ fontSize: 12, color: "#80868B", background: "#F1F3F4", borderRadius: 6, padding: "2px 8px" }}>{trip.flight_number}</span>
-                        )}
+                  <div key={trip.id} style={{ background: "#fff", border: "1px solid #E8EAED", borderRadius: 16, overflow: "hidden" }}>
+                    {/* Trip info row */}
+                    <div style={{ padding: "18px 20px", display: "flex", alignItems: "center", gap: 16 }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 14, background: sc.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <StatusIcon style={{ width: 20, height: 20, color: sc.color }} />
                       </div>
-                      <p style={{ fontSize: 13, color: "#5F6368" }}>
-                        {formatDate(trip.travel_date)} · {formatTime(trip.flight_time)} · {trip.pax_count} pax · {trip.bag_count} bag{trip.bag_count !== 1 ? "s" : ""}
-                      </p>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: "#202124" }}>
+                            {trip.direction === "to" ? `${trip.area} → BLR` : `BLR → ${trip.area}`}
+                          </span>
+                          {trip.flight_number && (
+                            <span style={{ fontSize: 12, color: "#80868B", background: "#F1F3F4", borderRadius: 6, padding: "2px 8px" }}>{trip.flight_number}</span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: 13, color: "#5F6368" }}>
+                          {formatDate(trip.travel_date)} · {formatTime(trip.flight_time)} · {trip.pax_count} pax · {trip.bag_count} bag{trip.bag_count !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: sc.color, background: sc.bg, borderRadius: 8, padding: "4px 12px" }}>
+                          {sc.label}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); cancelTrip(trip.id); }}
+                          style={{ fontSize: 11, color: "#D93025", background: "none", border: "1px solid #FADBD8", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontWeight: 500, fontFamily: "inherit" }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Right: status + fare */}
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, color: sc.color, background: sc.bg, borderRadius: 8, padding: "4px 12px", marginBottom: 4 }}>
-                        {sc.label}
-                      </span>
-                      {fare && (
-                        <p style={{ fontSize: 12, color: "#1E8E3E", fontWeight: 600 }}>save ₹{fare.savings}</p>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); cancelTrip(trip.id); }}
-                        style={{ fontSize: 11, color: "#D93025", background: "#FCE8E6", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontWeight: 600, marginTop: 4, fontFamily: "inherit" }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                    {/* Linked proposals */}
+                    {tripProposals.length > 0 && (
+                      <div style={{ borderTop: "1px solid #E8EAED" }}>
+                        {tripProposals.map((p: any) => {
+                          const initials = p.other_name?.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+                          const isConfirmed = p.status === "confirmed";
+                          const isExpired = p.status === "expired";
+                          const isRejected = p.status === "rejected";
+                          const isPending = p.status === "pending";
+
+                          const bgColor = isConfirmed ? "#E6F4EA" : isExpired || isRejected ? "#F8F9FA" : "#F8FBFF";
+                          const avatarBg = isConfirmed ? "#1E8E3E" : isExpired || isRejected ? "#BDC1C6" : "#1A73E8";
+                          const nameColor = isExpired || isRejected ? "#80868B" : "#202124";
+
+                          return (
+                            <div key={p.id} style={{ padding: "14px 20px", display: "flex", alignItems: "center", gap: 14, background: bgColor, borderTop: "1px solid #E8EAED" }}>
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 700, flexShrink: 0, opacity: isExpired || isRejected ? 0.6 : 1 }}>
+                                {initials}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <p style={{ fontSize: 13, fontWeight: 600, color: nameColor }}>
+                                  {p.other_name} <span style={{ fontWeight: 400, color: "#80868B" }}>· {p.other_area} · {formatTime(p.other_flight_time)}</span>
+                                </p>
+
+                                {isConfirmed && (
+                                  <p style={{ fontSize: 12, color: "#1E8E3E", marginTop: 2 }}>✅ Matched — you're sharing this ride!</p>
+                                )}
+                                {isPending && p.my_response === "pending" && (
+                                  <p style={{ fontSize: 12, color: "#1A73E8", marginTop: 2 }}>🔔 Waiting for your review</p>
+                                )}
+                                {isPending && p.my_response === "accepted" && p.other_response === "pending" && (
+                                  <p style={{ fontSize: 12, color: "#F9AB00", marginTop: 2 }}>⏳ You accepted — waiting for {p.other_name.split(" ")[0]}</p>
+                                )}
+                                {isExpired && p.my_response === "accepted" && (
+                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>Auto-expired — you matched with someone else</p>
+                                )}
+                                {isExpired && p.my_response === "pending" && (
+                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>Expired — no response in time</p>
+                                )}
+                                {isRejected && p.my_response === "rejected" && (
+                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>You declined this match</p>
+                                )}
+                                {isRejected && p.other_response === "rejected" && p.my_response !== "rejected" && (
+                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>{p.other_name.split(" ")[0]} declined this match</p>
+                                )}
+                              </div>
+
+                              {/* Status badge */}
+                              <div style={{ flexShrink: 0, textAlign: "right" }}>
+                                {isConfirmed && (
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: "#1E8E3E", background: "#C8E6C9", borderRadius: 6, padding: "3px 10px" }}>Confirmed</span>
+                                )}
+                                {isPending && p.my_response === "pending" && (
+                                  <Link href="/proposals" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#fff", background: "#1A73E8", textDecoration: "none", fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>
+                                    Review →
+                                  </Link>
+                                )}
+                                {isPending && p.my_response === "accepted" && (
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: "#F9AB00", background: "#FEF7E0", borderRadius: 6, padding: "3px 10px" }}>Waiting</span>
+                                )}
+                                {isExpired && (
+                                  <span style={{ fontSize: 11, fontWeight: 500, color: "#80868B", background: "#E8EAED", borderRadius: 6, padding: "3px 10px" }}>Expired</span>
+                                )}
+                                {isRejected && (
+                                  <span style={{ fontSize: 11, fontWeight: 500, color: "#D93025", background: "#FCE8E6", borderRadius: 6, padding: "3px 10px" }}>Declined</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Searching state */}
+                    {trip.status === "open" && tripProposals.length === 0 && (
+                      <div style={{ borderTop: "1px solid #E8EAED", padding: "12px 20px", background: "#FFFBF0", display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 14 }}>🔍</span>
+                        <p style={{ fontSize: 12, color: "#80868B" }}>Scanning for co-travellers on your route…</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}

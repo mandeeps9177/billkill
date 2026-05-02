@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import Navbar from "@/components/Navbar";
-import { ROUTES } from "@/data/config";
 import { Clock, MapPin, Plane, Users, ArrowRight, Check, X } from "lucide-react";
 
 export default function ProposalsPage() {
@@ -46,11 +45,6 @@ export default function ProposalsPage() {
     } catch (err: any) {
       alert(err.message || "Something went wrong");
     } finally { setActionLoading(null); }
-  };
-
-  const getFare = (area: string) => {
-    const r = ROUTES.find(r => r.area === area);
-    return r ? { solo: r.solo, shared: r.shared, savings: r.solo - r.shared, pct: Math.round(((r.solo - r.shared) / r.solo) * 100) } : null;
   };
 
   const formatDate = (d: string) => {
@@ -115,7 +109,6 @@ export default function ProposalsPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {proposals.map((p: any) => {
                 const isActive = p.id === selectedId;
-                const fare = getFare(p.my_area);
                 const initials = p.other_name?.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
                 return (
                   <button
@@ -133,7 +126,6 @@ export default function ProposalsPage() {
                       <p style={{ fontSize: 14, fontWeight: 600, color: "#202124", marginBottom: 2 }}>{p.other_name}</p>
                       <p style={{ fontSize: 12, color: "#80868B" }}>{p.other_area} · {formatTime(p.other_flight_time)}</p>
                     </div>
-                    {fare && <span style={{ fontSize: 13, fontWeight: 700, color: "#1E8E3E", flexShrink: 0 }}>-₹{fare.savings}</span>}
                   </button>
                 );
               })}
@@ -141,7 +133,6 @@ export default function ProposalsPage() {
 
             {/* Right: selected proposal detail */}
             {selected && (() => {
-              const fare = getFare(selected.my_area);
               const initials = selected.other_name?.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
               return (
                 <div style={{ background: "#fff", border: "1px solid #E8EAED", borderRadius: 20, overflow: "hidden", animation: "slideRight 0.3s ease" }} key={selected.id}>
@@ -193,25 +184,6 @@ export default function ProposalsPage() {
                         </div>
                       ))}
                     </div>
-
-                    {/* Savings breakdown */}
-                    {fare && (
-                      <div style={{ background: "#F8F9FA", borderRadius: 16, padding: "20px 22px", marginBottom: 24 }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: "#80868B", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.5px" }}>Fare breakdown</p>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                          <span style={{ fontSize: 14, color: "#5F6368" }}>Solo cab (Ola/Uber)</span>
-                          <span style={{ fontSize: 14, color: "#5F6368", textDecoration: "line-through" }}>₹{fare.solo}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                          <span style={{ fontSize: 14, color: "#5F6368" }}>Shared with Billkill</span>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: "#202124" }}>₹{fare.shared}</span>
-                        </div>
-                        <div style={{ borderTop: "1px solid #E8EAED", paddingTop: 10, display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: "#1E8E3E" }}>You save</span>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: "#1E8E3E" }}>₹{fare.savings} ({fare.pct}%)</span>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Trip link */}
                     <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#1A73E8", textDecoration: "none", fontWeight: 500, marginBottom: 24 }}>

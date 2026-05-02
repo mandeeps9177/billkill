@@ -38,6 +38,7 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link href="/dashboard" className={`text-sm px-3 py-2 rounded-full transition-all ${pathname === "/dashboard" ? "text-[#1A73E8] bg-[#E8F0FE] font-medium" : "text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]"}`}>Dashboard</Link>
+                <Link href="/proposals" className={`text-sm px-3 py-2 rounded-full transition-all ${pathname === "/proposals" ? "text-[#1A73E8] bg-[#E8F0FE] font-medium" : "text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]"}`}>Proposals</Link>
                 <Link href="/book" className={`text-sm px-3 py-2 rounded-full transition-all ${pathname === "/book" ? "text-[#1A73E8] bg-[#E8F0FE] font-medium" : "text-[#5F6368] hover:text-[#202124] hover:bg-[#F1F3F4]"}`}>Book trip</Link>
               </>
             ) : (
@@ -91,6 +92,7 @@ export default function Navbar() {
                 </div>
               </div>
               <Link href="/dashboard" className="text-sm text-[#5F6368] px-3 py-2.5 rounded-xl hover:bg-[#F1F3F4]" onClick={() => setOpen(false)}>Dashboard</Link>
+              <Link href="/proposals" className="text-sm text-[#5F6368] px-3 py-2.5 rounded-xl hover:bg-[#F1F3F4]" onClick={() => setOpen(false)}>Proposals</Link>
               <Link href="/book" className="text-sm text-[#5F6368] px-3 py-2.5 rounded-xl hover:bg-[#F1F3F4]" onClick={() => setOpen(false)}>Book trip</Link>
               <div className="border-t border-[#E8EAED] mt-2 pt-2">
                 <button onClick={() => { handleLogout(); setOpen(false); }} className="text-sm text-[#D93025] w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#FCE8E6]">Sign out</button>

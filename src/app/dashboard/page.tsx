@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [proposals, setProposals] = useState<any[]>([]);
   const [tripProposalMap, setTripProposalMap] = useState<Record<number, any[]>>({});
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return; }
@@ -59,6 +60,23 @@ export default function DashboardPage() {
       console.error("Failed to fetch data", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleProposalAction = async (proposalId: number, response: "accepted" | "rejected") => {
+    setActionLoading(proposalId);
+    try {
+      const res = await apiFetch("/api/proposals", {
+        method: "PATCH",
+        body: JSON.stringify({ proposal_id: proposalId, response }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message || "Something went wrong");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -166,10 +184,21 @@ export default function DashboardPage() {
                 const StatusIcon = sc.icon;
                 const tripProposals = tripProposalMap[trip.id] || [];
                 return (
-                  <div key={trip.id} style={{ background: "#fff", border: "1px solid #E8EAED", borderRadius: 16, overflow: "hidden" }}>
+                  <div key={trip.id} style={{
+                    background: trip.status === "matched" ? "#fff" : "#fff",
+                    border: "1px solid #E8EAED",
+                    borderRadius: 16, overflow: "hidden",
+                  }}>
                     {/* Trip info row */}
-                    <div style={{ padding: "18px 20px", display: "flex", alignItems: "center", gap: 16 }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 14, background: sc.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{
+                      padding: "18px 20px", display: "flex", alignItems: "center", gap: 16,
+                      background: "#fff",
+                    }}>
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 14,
+                        background: sc.bg,
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      }}>
                         <StatusIcon style={{ width: 20, height: 20, color: sc.color }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -180,15 +209,20 @@ export default function DashboardPage() {
                           {trip.flight_number && (
                             <span style={{ fontSize: 12, color: "#80868B", background: "#F1F3F4", borderRadius: 6, padding: "2px 8px" }}>{trip.flight_number}</span>
                           )}
+                          {trip.status === "matched" && (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "#1E8E3E", borderRadius: 6, padding: "3px 10px" }}>✓ RIDE MATCHED</span>
+                          )}
                         </div>
                         <p style={{ fontSize: 13, color: "#5F6368" }}>
                           {formatDate(trip.travel_date)} · {formatTime(trip.flight_time)} · {trip.pax_count} pax · {trip.bag_count} bag{trip.bag_count !== 1 ? "s" : ""}
                         </p>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: sc.color, background: sc.bg, borderRadius: 8, padding: "4px 12px" }}>
-                          {sc.label}
-                        </span>
+                        {trip.status !== "matched" && (
+                          <span style={{ fontSize: 12, fontWeight: 600, color: sc.color, background: sc.bg, borderRadius: 8, padding: "4px 12px" }}>
+                            {sc.label}
+                          </span>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); cancelTrip(trip.id); }}
                           style={{ fontSize: 11, color: "#D93025", background: "none", border: "1px solid #FADBD8", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontWeight: 500, fontFamily: "inherit" }}
@@ -200,71 +234,140 @@ export default function DashboardPage() {
 
                     {/* Linked proposals */}
                     {tripProposals.length > 0 && (
-                      <div style={{ borderTop: "1px solid #E8EAED" }}>
-                        {tripProposals.map((p: any) => {
+                      <div style={{ borderTop: "2px solid #E8EAED" }}>
+                        {/* Section header */}
+                        <div style={{ padding: "12px 20px", background: "#F8F9FA", display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Match History
+                          </span>
+                          <span style={{ fontSize: 11, color: "#80868B", background: "#E8EAED", borderRadius: 8, padding: "1px 8px" }}>
+                            {tripProposals.length}
+                          </span>
+                        </div>
+
+                        {tripProposals.map((p: any, idx: number) => {
                           const initials = p.other_name?.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
                           const isConfirmed = p.status === "confirmed";
                           const isExpired = p.status === "expired";
                           const isRejected = p.status === "rejected";
                           const isPending = p.status === "pending";
-
-                          const bgColor = isConfirmed ? "#E6F4EA" : isExpired || isRejected ? "#F8F9FA" : "#F8FBFF";
-                          const avatarBg = isConfirmed ? "#1E8E3E" : isExpired || isRejected ? "#BDC1C6" : "#1A73E8";
-                          const nameColor = isExpired || isRejected ? "#80868B" : "#202124";
+                          const faded = isExpired || isRejected;
 
                           return (
-                            <div key={p.id} style={{ padding: "14px 20px", display: "flex", alignItems: "center", gap: 14, background: bgColor, borderTop: "1px solid #E8EAED" }}>
-                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 700, flexShrink: 0, opacity: isExpired || isRejected ? 0.6 : 1 }}>
-                                {initials}
+                            <div key={p.id} style={{
+                              padding: "16px 20px",
+                              borderTop: idx > 0 ? "1px solid #E8EAED" : "none",
+                              background: isConfirmed ? "#E6F4EA" : faded ? "#FAFAFA" : "#fff",
+                              opacity: faded ? 0.65 : 1,
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                                <div style={{
+                                  width: 40, height: 40, borderRadius: "50%",
+                                  background: isConfirmed ? "#1E8E3E" : faded ? "#BDC1C6" : "#1A73E8",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
+                                }}>
+                                  {initials}
+                                </div>
+
+                                <div style={{ flex: 1 }}>
+                                  <p style={{ fontSize: 14, fontWeight: 600, color: faded ? "#80868B" : "#202124", marginBottom: 2 }}>
+                                    {p.other_name}
+                                  </p>
+                                  {!isConfirmed && (
+                                  <p style={{ fontSize: 12, color: "#80868B" }}>
+                                    {p.other_area} · Flight at {formatTime(p.other_flight_time)} · {p.other_pax} pax
+                                  </p>
+                                )}
+                                </div>
+
+                                {/* Status badge */}
+                                <div style={{ flexShrink: 0 }}>
+                                  {isConfirmed && (
+                                    <span style={{ fontSize: 11, fontWeight: 600, color: "#1E8E3E", background: "#C8E6C9", borderRadius: 8, padding: "4px 12px" }}>✓ Matched</span>
+                                  )}
+                                  {isExpired && (
+                                    <span style={{ fontSize: 11, fontWeight: 500, color: "#80868B", background: "#E8EAED", borderRadius: 8, padding: "4px 12px" }}>Expired</span>
+                                  )}
+                                  {isRejected && (
+                                    <span style={{ fontSize: 11, fontWeight: 500, color: "#D93025", background: "#FCE8E6", borderRadius: 8, padding: "4px 12px" }}>Declined</span>
+                                  )}
+                                  {isPending && p.my_response === "accepted" && (
+                                    <span style={{ fontSize: 11, fontWeight: 600, color: "#F9AB00", background: "#FEF7E0", borderRadius: 8, padding: "4px 12px" }}>⏳ Waiting</span>
+                                  )}
+                                </div>
                               </div>
-                              <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: 13, fontWeight: 600, color: nameColor }}>
-                                  {p.other_name} <span style={{ fontWeight: 400, color: "#80868B" }}>· {p.other_area} · {formatTime(p.other_flight_time)}</span>
+
+                              {/* Status explanation */}
+                              {isConfirmed && (
+                                <div style={{ marginTop: 12, padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #C8E6C9" }}>
+                                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                                    <div style={{ background: "#E6F4EA", borderRadius: 8, padding: "8px 12px" }}>
+                                      <p style={{ fontSize: 10, color: "#1E8E3E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>Area</p>
+                                      <p style={{ fontSize: 14, fontWeight: 700, color: "#202124" }}>{p.other_area}</p>
+                                    </div>
+                                    <div style={{ background: "#E6F4EA", borderRadius: 8, padding: "8px 12px" }}>
+                                      <p style={{ fontSize: 10, color: "#1E8E3E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>Their flight</p>
+                                      <p style={{ fontSize: 14, fontWeight: 700, color: "#202124" }}>{formatTime(p.other_flight_time)}</p>
+                                    </div>
+                                    <div style={{ background: "#E6F4EA", borderRadius: 8, padding: "8px 12px" }}>
+                                      <p style={{ fontSize: 10, color: "#1E8E3E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>Group size</p>
+                                      <p style={{ fontSize: 14, fontWeight: 700, color: "#202124" }}>{p.other_pax} pax</p>
+                                    </div>
+                                  </div>
+                                  <p style={{ fontSize: 12, color: "#1E8E3E", fontWeight: 500 }}>🎉 You're sharing this ride with {p.other_name.split(" ")[0]}! Coordinate pickup details before your trip.</p>
+                                </div>
+                              )}
+
+                              {isExpired && (
+                                <p style={{ fontSize: 11, color: "#80868B", marginTop: 6, marginLeft: 54 }}>
+                                  {p.my_response === "accepted" ? "Auto-expired — you matched with someone else" :
+                                   p.my_response === "pending" ? "Expired — no response in time" :
+                                   "Expired by system"}
                                 </p>
+                              )}
 
-                                {isConfirmed && (
-                                  <p style={{ fontSize: 12, color: "#1E8E3E", marginTop: 2 }}>✅ Matched — you're sharing this ride!</p>
-                                )}
-                                {isPending && p.my_response === "pending" && (
-                                  <p style={{ fontSize: 12, color: "#1A73E8", marginTop: 2 }}>🔔 Waiting for your review</p>
-                                )}
-                                {isPending && p.my_response === "accepted" && p.other_response === "pending" && (
-                                  <p style={{ fontSize: 12, color: "#F9AB00", marginTop: 2 }}>⏳ You accepted — waiting for {p.other_name.split(" ")[0]}</p>
-                                )}
-                                {isExpired && p.my_response === "accepted" && (
-                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>Auto-expired — you matched with someone else</p>
-                                )}
-                                {isExpired && p.my_response === "pending" && (
-                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>Expired — no response in time</p>
-                                )}
-                                {isRejected && p.my_response === "rejected" && (
-                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>You declined this match</p>
-                                )}
-                                {isRejected && p.other_response === "rejected" && p.my_response !== "rejected" && (
-                                  <p style={{ fontSize: 12, color: "#80868B", marginTop: 2 }}>{p.other_name.split(" ")[0]} declined this match</p>
-                                )}
-                              </div>
+                              {isRejected && (
+                                <p style={{ fontSize: 11, color: "#80868B", marginTop: 6, marginLeft: 54 }}>
+                                  {p.my_response === "rejected" ? "You declined this match" : p.other_name.split(" ")[0] + " declined this match"}
+                                </p>
+                              )}
 
-                              {/* Status badge */}
-                              <div style={{ flexShrink: 0, textAlign: "right" }}>
-                                {isConfirmed && (
-                                  <span style={{ fontSize: 11, fontWeight: 600, color: "#1E8E3E", background: "#C8E6C9", borderRadius: 6, padding: "3px 10px" }}>Confirmed</span>
-                                )}
-                                {isPending && p.my_response === "pending" && (
-                                  <Link href="/proposals" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#fff", background: "#1A73E8", textDecoration: "none", fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>
-                                    Review →
-                                  </Link>
-                                )}
-                                {isPending && p.my_response === "accepted" && (
-                                  <span style={{ fontSize: 11, fontWeight: 600, color: "#F9AB00", background: "#FEF7E0", borderRadius: 6, padding: "3px 10px" }}>Waiting</span>
-                                )}
-                                {isExpired && (
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: "#80868B", background: "#E8EAED", borderRadius: 6, padding: "3px 10px" }}>Expired</span>
-                                )}
-                                {isRejected && (
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: "#D93025", background: "#FCE8E6", borderRadius: 6, padding: "3px 10px" }}>Declined</span>
-                                )}
-                              </div>
+                              {isPending && p.my_response === "accepted" && p.other_response === "pending" && (
+                                <p style={{ fontSize: 11, color: "#F9AB00", marginTop: 6, marginLeft: 54 }}>
+                                  You accepted — waiting for {p.other_name.split(" ")[0]} to respond
+                                </p>
+                              )}
+
+                              {/* Inline accept/decline for pending proposals */}
+                              {isPending && p.my_response === "pending" && (
+                                <div style={{ marginTop: 12, marginLeft: 54, display: "flex", gap: 8 }}>
+                                  <button
+                                    onClick={() => handleProposalAction(p.id, "accepted")}
+                                    disabled={actionLoading === p.id}
+                                    style={{
+                                      display: "flex", alignItems: "center", gap: 6,
+                                      background: "#1E8E3E", color: "#fff", fontWeight: 600,
+                                      padding: "10px 20px", borderRadius: 10, fontSize: 13,
+                                      border: "none", cursor: "pointer", fontFamily: "inherit",
+                                    }}
+                                  >
+                                    {actionLoading === p.id ? "..." : "✓ Accept"}
+                                  </button>
+                                  <button
+                                    onClick={() => handleProposalAction(p.id, "rejected")}
+                                    disabled={actionLoading === p.id}
+                                    style={{
+                                      display: "flex", alignItems: "center", gap: 6,
+                                      background: "#fff", color: "#5F6368", fontWeight: 500,
+                                      padding: "10px 20px", borderRadius: 10, fontSize: 13,
+                                      border: "1px solid #DADCE0", cursor: "pointer", fontFamily: "inherit",
+                                    }}
+                                  >
+                                    Decline
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           );
                         })}

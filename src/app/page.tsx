@@ -1,7 +1,7 @@
 import Link from "next/link";
 import SavingsCalc from "@/components/SavingsCalc";
 import SignupCard from "@/components/SignupCard";
-import { ROUTES, SITE } from "@/data/config";
+import { SITE } from "@/data/config";
 
 export default function HomePage() {
   return (
@@ -86,37 +86,85 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SAVINGS TABLE */}
-      <section style={{ padding: "80px 24px", background: "#fff" }}>
-        <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          <h2 style={{ fontSize: 32, fontWeight: 700, color: "#202124", textAlign: "center", marginBottom: 8 }}>What you save</h2>
-          <p style={{ fontSize: 16, color: "#5F6368", textAlign: "center", marginBottom: 40 }}>Real fares for popular BLR routes</p>
+      {/* HOW IT WORKS — ANIMATED TRIP */}
+        <section style={{ padding: "80px 24px", background: "#fff" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 32, fontWeight: 700, color: "#202124", textAlign: "center", marginBottom: 8 }}>How it works</h2>
+            <p style={{ fontSize: 16, color: "#5F6368", textAlign: "center", marginBottom: 48 }}>Three steps to share your airport ride</p>
 
-          <div style={{ border: "1px solid #E8EAED", borderRadius: 16, overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-              <thead>
-                <tr style={{ background: "#F8F9FA" }}>
-                  <th style={{ textAlign: "left", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Route</th>
-                  <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Solo</th>
-                  <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Est. time</th>
-                  <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Saved</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ROUTES.map((r) => (
-                  <tr key={r.area} style={{ borderTop: "1px solid #E8EAED" }}>
-                    <td style={{ padding: "14px 20px", fontWeight: 500, color: "#202124" }}>{r.area}</td>
-                    <td style={{ padding: "14px 20px", textAlign: "right", color: "#5F6368" }}>{r.distance_km} km</td><td style={{ padding: "14px 20px", textAlign: "right", color: "#5F6368" }}>~{r.drive_mins} min</td>
-                  </tr>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginBottom: 48 }}>
+              {[
+                { step: "1", icon: "📍", title: "Book your trip", desc: "Enter your area, flight date, and time. Takes 30 seconds." },
+                { step: "2", icon: "🤝", title: "Get matched", desc: "We find co-travellers heading to the airport around the same time." },
+                { step: "3", icon: "🚗", title: "Share the ride", desc: "Coordinate pickup, split the cab, and save on your airport trip." },
+              ].map((s) => (
+                <div key={s.step} style={{ textAlign: "center", padding: "32px 20px" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#F8F9FA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 16px" }}>{s.icon}</div>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#202124", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, margin: "0 auto 12px" }}>{s.step}</div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#202124", marginBottom: 8 }}>{s.title}</h3>
+                  <p style={{ fontSize: 14, color: "#5F6368", lineHeight: 1.6 }}>{s.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Animated trip card */}
+            <div style={{ background: "#F8F9FA", borderRadius: 20, padding: "32px", overflow: "hidden", position: "relative" }}>
+              <style>{`
+                @keyframes carMove { 0% { transform: translateX(0); } 50% { transform: translateX(calc(100% - 40px)); } 100% { transform: translateX(0); } }
+                @keyframes pulse2 { 0%,100% { transform: scale(1); opacity:1; } 50% { transform: scale(1.2); opacity:0.7; } }
+                @keyframes fadeInUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+              `}</style>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "#1A73E8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 22 }}>🚕</span>
+                </div>
+                <div>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#202124" }}>Koramangala → BLR Airport</p>
+                  <p style={{ fontSize: 13, color: "#80868B" }}>Tomorrow, 6:30 AM · 2 co-travellers matched</p>
+                </div>
+              </div>
+
+              {/* Route line */}
+              <div style={{ position: "relative", height: 60, marginBottom: 24 }}>
+                <div style={{ position: "absolute", top: 28, left: 24, right: 24, height: 4, background: "#E8EAED", borderRadius: 2 }} />
+                <div style={{ position: "absolute", top: 28, left: 24, width: "60%", height: 4, background: "linear-gradient(90deg, #1A73E8, #1E8E3E)", borderRadius: 2 }} />
+                {/* Car */}
+                <div style={{ position: "absolute", top: 14, left: 24, right: 24 }}>
+                  <div style={{ fontSize: 24, animation: "carMove 4s ease-in-out infinite" }}>🚗</div>
+                </div>
+                {/* Start dot */}
+                <div style={{ position: "absolute", top: 24, left: 16, width: 12, height: 12, borderRadius: "50%", background: "#1A73E8", border: "3px solid #E8F0FE" }} />
+                {/* End dot */}
+                <div style={{ position: "absolute", top: 24, right: 16, width: 12, height: 12, borderRadius: "50%", background: "#1E8E3E", border: "3px solid #E6F4EA" }} />
+                {/* Labels */}
+                <p style={{ position: "absolute", bottom: 0, left: 0, fontSize: 11, color: "#5F6368", fontWeight: 600 }}>Koramangala</p>
+                <p style={{ position: "absolute", bottom: 0, right: 0, fontSize: 11, color: "#5F6368", fontWeight: 600 }}>BLR Airport</p>
+              </div>
+
+              {/* Matched travellers */}
+              <div style={{ display: "flex", gap: 12 }}>
+                {[
+                  { name: "Priya S.", time: "6:30 AM", flight: "6E-204" },
+                  { name: "Arjun R.", time: "7:00 AM", flight: "AI-501" },
+                ].map((t, i) => (
+                  <div key={t.name} style={{ flex: 1, background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1px solid #E8EAED", animation: `fadeInUp 0.5s ease ${i * 0.2}s both` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: i === 0 ? "#1A73E8" : "#1E8E3E", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
+                        {t.name.split(" ").map(w => w[0]).join("")}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: "#202124" }}>{t.name}</p>
+                        <p style={{ fontSize: 11, color: "#80868B" }}>{t.flight}</p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 12, color: "#5F6368" }}>✈️ Flight at {t.time}</p>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
-          <p style={{ fontSize: 12, color: "#BDC1C6", textAlign: "center", marginTop: 12 }}>
-            *Estimates based on average Ola/Uber pricing. Shared fare assumes a split between 2 riders. Actual fare varies based on the number of co-travellers matched and the taxi booked.
-          </p>
-        </div>
-      </section>
+        </section>
 
       {/* TRUST */}
       <section style={{ padding: "80px 24px", background: "#F8F9FA" }}>

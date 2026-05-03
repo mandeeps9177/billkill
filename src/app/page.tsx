@@ -55,7 +55,6 @@ export default function HomePage() {
 
           {/* Asterisk disclaimer */}
           <p style={{ fontSize: 11, color: "#BDC1C6", marginTop: 16, maxWidth: 500 }}>
-            *Fares are estimates based on splitting between 2–3 co-travellers on the same route. Actual fare depends on the number of riders matched and the taxi booked.
           </p>
         </div>
       </section>

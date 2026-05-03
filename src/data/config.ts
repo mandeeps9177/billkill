@@ -16,7 +16,7 @@ export const ROUTES = [
 
 export const SITE = {
   heroPrice: "Airport Cab Sharing",
-  heroSubtext: "Find co-travellers heading to BLR Airport. Share the ride, split the cost.",
+  heroSubtext: "Find co-travellers heading to/from BLR Airport. Share the ride, split the cost with trusted co-riders.",
   ctaText: "Start sharing rides",
   ctaSubtext: "Join thousands of Bengaluru travellers saving on airport cabs",
   matchedCount: "2,400+",

@@ -15,7 +15,7 @@ export const ROUTES = [
 ];
 
 export const SITE = {
-  heroPrice: "",
+  heroPrice: "Airport Cab Sharing",
   heroSubtext: "Find co-travellers heading to BLR Airport. Share the ride, split the cost.",
   ctaText: "Start sharing rides",
   ctaSubtext: "Join thousands of Bengaluru travellers saving on airport cabs",

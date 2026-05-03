@@ -60,32 +60,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section style={{ padding: "80px 24px", background: "#F8F9FA" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ fontSize: 32, fontWeight: 700, color: "#202124", textAlign: "center", marginBottom: 8 }}>How it works</h2>
-          <p style={{ fontSize: 16, color: "#5F6368", textAlign: "center", marginBottom: 48 }}>Three steps to a cheaper airport ride</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24 }}>
-            {[
-              { step: "1", title: "Sign up in 30 seconds", desc: "Google, LinkedIn, or phone number. We verify everyone so you know who you're riding with." },
-              { step: "2", title: "Enter your flight details", desc: "Tell us your travel date, flight time, and pickup area. We handle the rest." },
-              { step: "3", title: "Match, share, save", desc: "We find someone on the same route at the same time. Share the cab and split the bill." },
-            ].map((item) => (
-              <div key={item.step} style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #E8EAED" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F1F3F4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#202124" }}>
-                    {item.step}
-                  </div>
-                </div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#202124", marginBottom: 8 }}>{item.title}</h3>
-                <p style={{ fontSize: 14, color: "#5F6368", lineHeight: 1.6 }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* HOW IT WORKS — ANIMATED TRIP */}
         <section style={{ padding: "80px 24px", background: "#fff" }}>
           <div style={{ maxWidth: 900, margin: "0 auto" }}>

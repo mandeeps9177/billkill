@@ -66,7 +66,7 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/login" className="btn-ghost text-sm">Sign in</Link>
-                <Link href="/signup" className="btn-primary text-sm">Get started</Link>
+                <Link href="/login" className="btn-primary text-sm">Get started</Link>
               </>
             )}
           </div>
@@ -102,7 +102,7 @@ export default function Navbar() {
               <Link href="/#savings" className="text-sm text-[#5F6368] px-3 py-2.5 rounded-xl hover:bg-[#F1F3F4]" onClick={() => setOpen(false)}>Savings</Link>
               <div className="border-t border-[#DADCE0] mt-2 pt-2 flex flex-col gap-2">
                 <Link href="/login" className="text-sm text-center text-[#1A73E8] font-medium px-3 py-2.5 rounded-xl hover:bg-[#E8F0FE]" onClick={() => setOpen(false)}>Sign in</Link>
-                <Link href="/signup" className="btn-primary text-sm text-center" onClick={() => setOpen(false)}>Get started</Link>
+                <Link href="/login" className="btn-primary text-sm text-center" onClick={() => setOpen(false)}>Get started</Link>
               </div>
             </>
           )}

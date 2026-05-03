@@ -35,7 +35,7 @@ export default function HomePage() {
                 BLR Airport · Bengaluru
               </p>
               <h1 style={{ fontSize: 48, fontWeight: 800, color: "#202124", lineHeight: 1.08, marginBottom: 16, letterSpacing: -1 }}>
-                Airport cab<br />starting {SITE.heroPrice}
+                Airport cab<br />sharing {SITE.heroPrice}
               </h1>
               <p style={{ fontSize: 18, color: "#5F6368", lineHeight: 1.6, marginBottom: 28, maxWidth: 440 }}>
                 {SITE.heroSubtext}

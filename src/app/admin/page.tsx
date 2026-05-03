@@ -1,10 +1,24 @@
 "use client";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/components/AuthContext";
+import { useRouter } from "next/navigation";
 
 const ADMIN_KEY = "billkill-admin-2026";
 
 export default function AdminPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && (!user || user.phone !== "9741512815")) {
+      router.push("/");
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading || !user || user.phone !== "9741512815") {
+    return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><p>Loading...</p></div>;
+  }
   const [tables, setTables] = useState<string[]>([]);
   const [activeTable, setActiveTable] = useState("");
   const [rows, setRows] = useState<any[]>([]);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, queryOne, queryAll, execute, persistDb } from "@/db";
+import { queryOne, queryAll, execute, persistDb } from "@/db";
 import { getUserFromRequest } from "@/db/auth";
 
 export async function POST(request: Request) {
@@ -23,17 +23,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "direction must be 'to' or 'from'" }, { status: 400 });
     }
 
-    const db = await getDb();
-
-    const { lastId } = execute(
-      db,
-      `INSERT INTO trip_requests (user_id, direction, area, terminal, travel_date, flight_time, flight_number, pax_count, bag_count)
+    const { lastId } = await execute(`INSERT INTO trip_requests (user_id, direction, area, terminal, travel_date, flight_time, flight_number, pax_count, bag_count)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [auth.userId, direction, area, terminal, travel_date, flight_time, flight_number || null, pax_count || 1, bag_count || 0]
     );
     persistDb();
 
-    const trip = queryOne(db, "SELECT * FROM trip_requests WHERE id = ?", [lastId]);
+    const trip = await queryOne("SELECT * FROM trip_requests WHERE id = ?", [lastId]);
 
     return NextResponse.json({ trip }, { status: 201 });
   } catch (err: any) {
@@ -48,11 +44,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const db = await getDb();
-
-    const trips = queryAll(
-      db,
-      "SELECT * FROM trip_requests WHERE user_id = ? ORDER BY created_at DESC",
+    const trips = await queryAll("SELECT * FROM trip_requests WHERE user_id = ? ORDER BY created_at DESC",
       [auth.userId]
     );
 

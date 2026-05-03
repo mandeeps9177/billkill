@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, queryAll } from "@/db";
+import { queryAll } from "@/db";
 import { getUserFromRequest } from "@/db/auth";
 
 // GET /api/trip-requests/proposals?trip_id=X
@@ -13,11 +13,7 @@ export async function GET(request: Request) {
     const tripId = url.searchParams.get("trip_id");
     if (!tripId) return NextResponse.json({ error: "trip_id is required" }, { status: 400 });
 
-    const db = await getDb();
-
-    const proposals = queryAll(
-      db,
-      `SELECT
+    const proposals = await queryAll(`SELECT
         mp.*,
         other_trip.area AS other_area,
         other_trip.flight_time AS other_flight_time,

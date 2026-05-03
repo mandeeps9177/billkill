@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { getDb, queryAll, queryOne, execute, persistDb } from "@/db";
+import { queryAll, queryOne, execute, persistDb } from "@/db";
 
 const MATCH_WINDOW_MINUTES = 90;
 
 export async function POST() {
   try {
-    const db = await getDb();
 
     // 1. Find all open/proposed trip requests for upcoming dates
-    const openTrips = queryAll(
-      db,
-      `SELECT * FROM trip_requests
+    const openTrips = await queryAll(`SELECT * FROM trip_requests
        WHERE status IN ('open', 'proposed')
          AND travel_date >= date('now')
        ORDER BY direction, area, terminal, travel_date, flight_time`
@@ -20,9 +17,7 @@ export async function POST() {
 
     // 2. For each open trip, find compatible candidates
     for (const trip of openTrips) {
-      const candidates = queryAll(
-        db,
-        `SELECT * FROM trip_requests
+      const candidates = await queryAll(`SELECT * FROM trip_requests
          WHERE id != ?
            AND user_id != ?
            AND status IN ('open', 'proposed')
@@ -42,17 +37,13 @@ export async function POST() {
         const [idA, idB] = trip.id < candidate.id ? [trip.id, candidate.id] : [candidate.id, trip.id];
 
         // Skip if proposal already exists
-        const existing = queryOne(
-          db,
-          "SELECT id FROM match_proposals WHERE trip_request_a = ? AND trip_request_b = ? AND status IN ('pending', 'confirmed')",
+        const existing = await queryOne("SELECT id FROM match_proposals WHERE trip_request_a = ? AND trip_request_b = ? AND status IN ('pending', 'confirmed')",
           [idA, idB]
         );
         if (existing) continue;
 
         // Skip if either trip is already confirmed
-        const alreadyMatched = queryOne(
-          db,
-          `SELECT id FROM match_proposals
+        const alreadyMatched = await queryOne(`SELECT id FROM match_proposals
            WHERE status = 'confirmed'
              AND (trip_request_a IN (?, ?) OR trip_request_b IN (?, ?))`,
           [idA, idB, idA, idB]
@@ -60,32 +51,26 @@ export async function POST() {
         if (alreadyMatched) continue;
 
         // Create proposal
-        execute(
-          db,
-          "INSERT INTO match_proposals (trip_request_a, trip_request_b) VALUES (?, ?)",
+        await execute("INSERT INTO match_proposals (trip_request_a, trip_request_b) VALUES (?, ?)",
           [idA, idB]
         );
 
         // Update trip statuses to 'proposed'
-        execute(db, "UPDATE trip_requests SET status = 'proposed' WHERE id IN (?, ?) AND status = 'open'", [idA, idB]);
+        await execute("UPDATE trip_requests SET status = 'proposed' WHERE id IN (?, ?) AND status = 'open'", [idA, idB]);
 
         proposalsCreated++;
       }
     }
 
     // 3. Expire stale proposals (>24 hours, still pending)
-    const { changes: proposalsExpired } = execute(
-      db,
-      `UPDATE match_proposals
+    const { changes: proposalsExpired } = await execute(`UPDATE match_proposals
        SET status = 'expired', resolved_at = datetime('now')
        WHERE status = 'pending'
          AND proposed_at < datetime('now', '-24 hours')`
     );
 
     // 4. Expire trip requests whose travel date has passed
-    const { changes: tripsExpired } = execute(
-      db,
-      `UPDATE trip_requests
+    const { changes: tripsExpired } = await execute(`UPDATE trip_requests
        SET status = 'expired'
        WHERE status IN ('open', 'proposed')
          AND travel_date < date('now')`

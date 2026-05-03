@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, queryOne } from "@/db";
+import { queryOne } from "@/db";
 import { verifyPassword, generateToken } from "@/db/auth";
 
 export async function POST(request: Request) {
@@ -10,9 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "phone and password are required" }, { status: 400 });
     }
 
-    const db = await getDb();
-    const user = queryOne(
-      db,
+    const user: any = await queryOne(
       "SELECT id, name, phone, email, password_hash FROM users WHERE phone = ?",
       [phone]
     );

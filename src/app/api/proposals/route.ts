@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, queryOne, queryAll, execute, persistDb } from "@/db";
+import { queryOne, queryAll, execute, persistDb } from "@/db";
 import { getUserFromRequest } from "@/db/auth";
 
 // GET /api/proposals — list match proposals for the current user
@@ -10,11 +10,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const db = await getDb();
-
-    const proposals = queryAll(
-      db,
-      `SELECT
+    const proposals = await queryAll(`SELECT
         mp.*,
         my_trip.direction,
         my_trip.area        AS my_area,
@@ -66,12 +62,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const db = await getDb();
-
     // Find the proposal and figure out which side the user is on
-    const proposal = queryOne(
-      db,
-      `SELECT mp.*,
+    const proposal = await queryOne(`SELECT mp.*,
         tra.user_id AS user_a,
         trb.user_id AS user_b
       FROM match_proposals mp
@@ -101,17 +93,13 @@ export async function PATCH(request: Request) {
     const otherResponseCol = mySide === "a" ? "user_b_response" : "user_a_response";
 
     // Update my response
-    execute(
-      db,
-      `UPDATE match_proposals SET ${responseCol} = ? WHERE id = ?`,
+    await execute(`UPDATE match_proposals SET ${responseCol} = ? WHERE id = ?`,
       [response, proposal_id]
     );
 
     // If rejected, mark the whole proposal as rejected
     if (response === "rejected") {
-      execute(
-        db,
-        "UPDATE match_proposals SET status = 'rejected', resolved_at = datetime('now') WHERE id = ?",
+      await execute("UPDATE match_proposals SET status = 'rejected', resolved_at = datetime('now') WHERE id = ?",
         [proposal_id]
       );
       persistDb();
@@ -125,13 +113,11 @@ export async function PATCH(request: Request) {
       // Both accepted — confirm the match
 
       // Check both trip requests are still open/proposed
-      const tripA = queryOne(db, "SELECT status FROM trip_requests WHERE id = ?", [proposal.trip_request_a]);
-      const tripB = queryOne(db, "SELECT status FROM trip_requests WHERE id = ?", [proposal.trip_request_b]);
+      const tripA = await queryOne("SELECT status FROM trip_requests WHERE id = ?", [proposal.trip_request_a]);
+      const tripB = await queryOne("SELECT status FROM trip_requests WHERE id = ?", [proposal.trip_request_b]);
 
       if (tripA.status === "matched" || tripB.status === "matched") {
-        execute(
-          db,
-          "UPDATE match_proposals SET status = 'expired', resolved_at = datetime('now') WHERE id = ?",
+        await execute("UPDATE match_proposals SET status = 'expired', resolved_at = datetime('now') WHERE id = ?",
           [proposal_id]
         );
         persistDb();
@@ -139,20 +125,16 @@ export async function PATCH(request: Request) {
       }
 
       // Confirm this proposal
-      execute(
-        db,
-        "UPDATE match_proposals SET status = 'confirmed', resolved_at = datetime('now') WHERE id = ?",
+      await execute("UPDATE match_proposals SET status = 'confirmed', resolved_at = datetime('now') WHERE id = ?",
         [proposal_id]
       );
 
       // Mark both trip requests as matched
-      execute(db, "UPDATE trip_requests SET status = 'matched' WHERE id = ?", [proposal.trip_request_a]);
-      execute(db, "UPDATE trip_requests SET status = 'matched' WHERE id = ?", [proposal.trip_request_b]);
+      await execute("UPDATE trip_requests SET status = 'matched' WHERE id = ?", [proposal.trip_request_a]);
+      await execute("UPDATE trip_requests SET status = 'matched' WHERE id = ?", [proposal.trip_request_b]);
 
       // Expire all other pending proposals involving either trip request
-      execute(
-        db,
-        `UPDATE match_proposals
+      await execute(`UPDATE match_proposals
          SET status = 'expired', resolved_at = datetime('now')
          WHERE id != ?
            AND status = 'pending'

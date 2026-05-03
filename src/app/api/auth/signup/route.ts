@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, queryOne, execute, persistDb } from "@/db";
+import { queryOne, execute, persistDb } from "@/db";
 import { hashPassword, generateToken } from "@/db/auth";
 
 export async function POST(request: Request) {
@@ -10,16 +10,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "name, phone, and password are required" }, { status: 400 });
     }
 
-    const db = await getDb();
-
-    const existing = queryOne(db, "SELECT id FROM users WHERE phone = ?", [phone]);
+    const existing = await queryOne("SELECT id FROM users WHERE phone = ?", [phone]);
     if (existing) {
       return NextResponse.json({ error: "Phone number already registered" }, { status: 409 });
     }
 
-    const { lastId } = execute(
-      db,
-      "INSERT INTO users (name, phone, email, password_hash) VALUES (?, ?, ?, ?)",
+    const { lastId } = await execute("INSERT INTO users (name, phone, email, password_hash) VALUES (?, ?, ?, ?)",
       [name, phone, email || null, hashPassword(password)]
     );
     persistDb();

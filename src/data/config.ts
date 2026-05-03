@@ -13,3 +13,12 @@ export const ROUTES = [
   { area: "Bellandur", distance_km: 40, drive_mins: 75 },
   { area: "Bannerghatta Road", distance_km: 55, drive_mins: 95 },
 ];
+
+export const SITE = {
+  heroPrice: "",
+  heroSubtext: "Find co-travellers heading to BLR Airport. Share the ride, split the cost.",
+  ctaText: "Start sharing rides",
+  ctaSubtext: "Join thousands of Bengaluru travellers saving on airport cabs",
+  matchedCount: "2,400+",
+  copyright: "© 2026 Billkill. All rights reserved.",
+};

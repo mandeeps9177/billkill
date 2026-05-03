@@ -97,7 +97,30 @@ export default function BookPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleNext = () => { if (validate()) setStep(2); };
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await apiFetch("/api/trip-requests", {
+        method: "POST",
+        body: JSON.stringify({
+          direction, area, terminal,
+          travel_date: date, flight_time: time,
+          flight_number: flight || undefined,
+          pax_count: parseInt(pax), bag_count: parseInt(bags),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      await apiFetch("/api/match-batch", { method: "POST" });
+      setStep(3);
+    } catch (err: any) {
+      setSubmitError(err.message || "Failed to submit trip");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -274,7 +297,10 @@ export default function BookPage() {
                   </div>
                 </div>
 
-                <button onClick={handleNext} className="bk-btn">See my savings quote →</button>
+                <button onClick={handleSubmit} className="bk-btn" disabled={submitting}>
+                  {submitting ? "Finding matches…" : "Find my match →"}
+                </button>
+                {submitError && <p style={{ fontSize: 12, color: "#D93025", marginTop: 8, textAlign: "center" }}>{submitError}</p>}
               </div>
 
               {/* RIGHT: Dynamic Visual */}

@@ -98,7 +98,7 @@ export default function HomePage() {
                 <tr style={{ background: "#F8F9FA" }}>
                   <th style={{ textAlign: "left", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Route</th>
                   <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Solo</th>
-                  <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Billkill</th>
+                  <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Est. time</th>
                   <th style={{ textAlign: "right", padding: "12px 20px", fontSize: 11, fontWeight: 600, color: "#80868B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Saved</th>
                 </tr>
               </thead>
@@ -106,9 +106,7 @@ export default function HomePage() {
                 {ROUTES.map((r) => (
                   <tr key={r.area} style={{ borderTop: "1px solid #E8EAED" }}>
                     <td style={{ padding: "14px 20px", fontWeight: 500, color: "#202124" }}>{r.area}</td>
-                    <td style={{ padding: "14px 20px", textAlign: "right", color: "#BDC1C6", textDecoration: "line-through" }}>₹{r.solo}</td>
-                    <td style={{ padding: "14px 20px", textAlign: "right", fontWeight: 700, color: "#202124" }}>₹{r.shared}</td>
-                    <td style={{ padding: "14px 20px", textAlign: "right", fontWeight: 600, color: "#1A73E8" }}>₹{r.solo - r.shared}</td>
+                    <td style={{ padding: "14px 20px", textAlign: "right", color: "#5F6368" }}>{r.distance_km} km</td><td style={{ padding: "14px 20px", textAlign: "right", color: "#5F6368" }}>~{r.drive_mins} min</td>
                   </tr>
                 ))}
               </tbody>

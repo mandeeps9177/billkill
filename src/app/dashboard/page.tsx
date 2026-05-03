@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Plane, MapPin, Plus, Clock, Users, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
-import { ROUTES } from "@/data/config";
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   open: { label: "Searching", color: "#F9AB00", bg: "#FEF7E0", icon: Clock },
@@ -98,10 +97,6 @@ export default function DashboardPage() {
   const activeTrips = trips.filter(t => ["open", "proposed", "matched"].includes(t.status));
   const pastTrips = trips.filter(t => ["expired", "cancelled"].includes(t.status));
 
-  const getFare = (area: string) => {
-    const r = ROUTES.find(r => r.area === area);
-    return r ? { solo: r.solo, shared: r.shared, savings: r.solo - r.shared } : null;
-  };
 
   const formatDate = (d: string) => {
     try {
